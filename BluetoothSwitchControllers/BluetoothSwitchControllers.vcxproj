@@ -19,12 +19,12 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="bth_scan.h" />
+    <ClInclude Include="bthSwitch.h" />
     <ClInclude Include="capp.h" />
     <ClInclude Include="cMain.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="bth_scan.cpp" />
+    <ClCompile Include="bthSwitch.cpp" />
     <ClCompile Include="capp.cpp" />
     <ClCompile Include="cMain.cpp" />
   </ItemGroup>
