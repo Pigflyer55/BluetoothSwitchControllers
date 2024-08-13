@@ -1,7 +1,7 @@
 #pragma once
 
 #include "wx/wx.h"
-//#include "bthSwitch.h"
+#include "bthSwitch.h"
 
 class cMain : public wxFrame
 {
@@ -15,7 +15,7 @@ private:
 	wxTextCtrl* m_txt1 = nullptr;
 	wxListBox* m_list1 = nullptr;
 	LPWSADATA lpWSAData = nullptr;
-	//bthSwitch* bth;
+	bthSwitch* bth_man = nullptr;
 
 	void OnButtonClicked(wxCommandEvent& evt);
 	void FindDeviceClicked(wxCommandEvent& evt);
