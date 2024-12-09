@@ -6,146 +6,109 @@
 #include <string>
 #include <vector>
 
-#include <initguid.h>
-#include <bthsdpdef.h>
-#include <bthdef.h>
-#include <bluetoothapis.h>
-
 #include <debugapi.h>
 
-bthSwitch::bthSwitch() {
-	joy_con_r_socket = socket(AF_BTH, SOCK_STREAM, BTHPROTO_L2CAP); //BTHPROTO_RFCOMM might only work instead of BTHPROTO_L2CAP? SOCK_SEQPACKET
-	joy_con_l_socket = socket(AF_BTH, SOCK_STREAM, BTHPROTO_L2CAP); 
+#include "Joycon.h"
 
-	
-	WORD versionWinSock = MAKEWORD(2, 2);
-	lpWSAData = new WSADATA;
-	int out = WSAStartup(versionWinSock, lpWSAData);
-	//printf(std::to_string(lpWSAData->wVersion).c_str());
-	if (out != 0) {
-		OutputDebugStringA("No usable WINSOCK DLL.");
-		wsa_started = false;
-		//Close(true);
+bthSwitch::bthSwitch() {
+	if (!hid_init()) {
+		wprintf(hid_error(NULL));
 	}
-	if (LOBYTE(lpWSAData->wVersion) != 2 || HIBYTE(lpWSAData->wVersion) != 2) {
-		OutputDebugStringA("No usable WINSOCK DLL");
-		wsa_started = false;
-		WSACleanup();
-	}
+
 }
 
 bthSwitch::~bthSwitch() {
-	if (WSACleanup() == 0) {
-		OutputDebugStringA("Socket Disconnected!");
+	for (int x = 0; x < this->devices.size(); x++) {
+		hid_close(this->devices[x]);
 	}
-	else {
-		OutputDebugStringA(std::to_string(WSAGetLastError()).c_str());
-	}
-	delete this->lpWSAData;
-	closesocket(joy_con_l_socket);
-	closesocket(joy_con_r_socket);
+	this->devices.clear();
+
+	hid_exit();
 }
 
-bool bthSwitch::get_wsa_started() {
-	return wsa_started;
-}
-
-/**
+/*
+* @brief Finds and opens a controller that was not open before
 * 
+* @param controllers: A linked list containing information about controllers
 * 
+* @returns A pointer to a hid_device object for a previously not open controller
 * 
 */
-void bthSwitch::connect_joycons(SOCKADDR_BTH* joy_l, SOCKADDR_BTH* joy_r) {
-	int error_code1 = connect(this->joy_con_l_socket, (SOCKADDR*)joy_l, sizeof(joy_l));
-	int error_code2 = connect(this->joy_con_r_socket, (SOCKADDR*)joy_r, sizeof(joy_r));
-	if (error_code1 == SOCKET_ERROR) {
-		OutputDebugStringA(("Error code: " + std::to_string(WSAGetLastError()) + " for socket joy_con_l").c_str());
+hid_device* bthSwitch::getDeviceNotOpen(hid_device_info* controllers) {
+	hid_device_info* curDevInfo = controllers;
+	hid_device* unOpenDev = NULL;
+	bool open = false;
+
+	// Find a Joy-Con(R) that is not currently open
+	while (curDevInfo) {
+		open = false;
+		// Check opened device serial number to verify device is not already open
+		for (int x = 0; x < this->devices.size(); x++) {
+			hid_device_info* openDevInfo = hid_get_device_info(this->devices[x]);
+			if (curDevInfo->serial_number == openDevInfo[x].serial_number) {
+				curDevInfo = curDevInfo->next;
+				open = true;
+			}
+			hid_free_enumeration(openDevInfo);
+			// Device is open, no need to search if this device is open anymore
+			if (open) {
+				break;
+			}
+		}
+		// Device is not open, so can be used as controller
+		if (!open) {
+			unOpenDev = hid_open(0x57E, 0x2007, curDevInfo->serial_number);
+			this->devices.push_back(unOpenDev);
+			break;
+		}
 	}
-	if (error_code2 == SOCKET_ERROR) {
-		OutputDebugStringA(("Error code: " + std::to_string(WSAGetLastError()) + " for socket joy_con_r").c_str());
-	}
+
+	return unOpenDev;
 }
 
 /**
-* Return SOCKETADDR_BTH for Joy-Con(L) and Joy-Con(R)
+* @brief Find and open a connection to the Joy-Con(s) not being used
+**/
+void bthSwitch::connectJoycons() {
+	// Nintendo VID = 0x57E
+	// Joy-Con R PID = 2007
+	// Joy-Con L PID = 2006
+	// Pro Controller PID = 2009
+
+	//hid_device_info* proControllers = hid_enumerate(0x57E, 0x2009);
+
+	hid_device_info* leftJoyCons = hid_enumerate(0x57E, 0x2006);
+
+	hid_device_info* rightJoyCons = hid_enumerate(0x57E, 0x2007);
+
+	// Check if no devices
+
+
+	//wchar_t* joySerialNum = rightJoyCons->serial_number;
+	hid_device_info* rightFirst = rightJoyCons;
+	this->getDeviceNotOpen(rightJoyCons);
+
+	hid_device_info* leftFirst = leftJoyCons;
+	this->getDeviceNotOpen(leftJoyCons);
+	
+	
+	hid_free_enumeration(rightFirst);
+	hid_free_enumeration(leftFirst);
+	
+	// Create Joycon object and append to player array
+	//players =
+
+}
+
+
+
+/**
+* @brief Return battery level of Joy-Con(s)
 * 
 * 
 * @param[out] bth_info the bluetooth device info needed for socket connection
 */
-int bthSwitch::find_joycons(SOCKADDR_BTH** bth_info) {
-	LPWSAQUERYSETW q = new WSAQUERYSETW();
-	memset(q, 0, sizeof(WSAQUERYSETW));
-	q->dwSize = sizeof(WSAQUERYSETW);
-	q->dwNameSpace = NS_BTH;
-
-	DWORD dwCtrlFlag = LUP_FLUSHCACHE | LUP_CONTAINERS;
-	DWORD dwErr;
-	HANDLE lookUp = 0;
-
-	int lookUpStatus = WSALookupServiceBeginW(q, dwCtrlFlag, &lookUp);
-	dwErr = WSAGetLastError();
-
-	/* 
-	bth_query might get data that is bigger than sizeof(WSAQUERYSETA)
-	Extra memory is given to account for this
-	*/
-	char* buff = new char[sizeof(WSAQUERYSETW) + 2000];
-	LPWSAQUERYSETW bth_query = (WSAQUERYSETW*)buff;
-	int error_code = 0;
-
-	while (1) {
-		DWORD nextCtrlFlags = LUP_RETURN_NAME | LUP_RETURN_ADDR | LUP_RETURN_BLOB | LUP_RES_SERVICE | LUP_RETURN_TYPE;
-		DWORD size = sizeof(WSAQUERYSETW) + 2000;
-
-		memset(bth_query, 0, sizeof(WSAQUERYSETW) + 2000);
-		error_code = WSALookupServiceNextW(lookUp, nextCtrlFlags, &size, bth_query);
-		dwErr = WSAGetLastError();
-		if (dwErr == WSA_NOT_ENOUGH_MEMORY) {
-			OutputDebugStringA("Not enough memory for query");
-			break;
-		}
-
-		OutputDebugStringA(std::to_string(dwErr).c_str());
-		OutputDebugStringA(std::to_string(error_code).c_str());
-		if (error_code == SOCKET_ERROR) {
-			if (dwErr == WSAEFAULT) {
-				OutputDebugStringA("Buffer too small");
-				break;
-			}
-			else if (dwErr == WSA_E_NO_MORE || dwErr == WSAENOMORE || lookUp == NULL) {
-				break;
-			}
-		}
-
-		// Automatically get Joy Con information. Later might add manual bluetooth device selection.
-		if (lstrcmpW(bth_query->lpszServiceInstanceName, L"Joy-Con (R)") == 0) {
-			OutputDebugStringW(L"Joy-Con (R) found");
-			//SOCKADDR_BTH* joy_addr = new SOCKADDR_BTH();
-			PSOCKADDR_BTH mac_address = (PSOCKADDR_BTH)bth_query->lpcsaBuffer->RemoteAddr.lpSockaddr;
-			bth_info[1]->addressFamily = AF_BTH;
-			bth_info[1]->btAddr = mac_address->btAddr;
-			bth_info[1]->port = 0;
-			bth_info[1]->serviceClassId = mac_address->serviceClassId;
-
-			//bth_info[1] = joy_addr; // This is hardcoded, in the future replace this for dynamic
-			int asda = 0;
-		} else if (lstrcmpW(bth_query->lpszServiceInstanceName, L"Joy-Con (L)") == 0){
-			OutputDebugStringW(L"Joy-Con(L) found");
-			//SOCKADDR_BTH* joy_addr = new SOCKADDR_BTH();
-			PSOCKADDR_BTH mac_address = (PSOCKADDR_BTH)bth_query->lpcsaBuffer->RemoteAddr.lpSockaddr;
-			bth_info[0]->addressFamily = AF_BTH;
-			bth_info[0]->btAddr = mac_address->btAddr;
-			bth_info[0]->port = 0;
-			bth_info[0]->serviceClassId = mac_address->serviceClassId;
-
-			//bth_info[0] = joy_addr; // This is hardcoded, in the future replace this for dynamic
-		}
-
-	}
-
-	// End WSA service and release memory
-	WSALookupServiceEnd(lookUp);
-	delete[] bth_query;
-	delete q;
-	return 0;
+int* bthSwitch::contBatteryLevel(int player) {
+	Joycon* controller = this->players[player];
+	return NULL;
 }

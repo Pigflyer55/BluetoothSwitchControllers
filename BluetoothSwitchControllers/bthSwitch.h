@@ -2,23 +2,34 @@
 
 #include <iostream>
 
-#include <WinSock2.h>
-#include <ws2bth.h>
 #include <windows.h>
-
+#include <vector>
+#include <thread>
+#include <hidapi.h>
+#include "Joycon.h"
 
 class bthSwitch
 {
 public:
+	//Consider making connect and disconnect int for error code
+
 	bthSwitch();
 	~bthSwitch();
-	int find_joycons(SOCKADDR_BTH** bth_info);
-	void connect_joycons(SOCKADDR_BTH* joy_l, SOCKADDR_BTH* joy_r);
-	bool get_wsa_started();
+	void connectJoycons();
+	void disconnectJoycons();
+	int* contBatteryLevel(int player);
+	int changeKey();
+
+
+// Future functions
+// 	   keyboardMapping() get a file containing controller to key mappings
+//     controllerDisplay() to display coloured controller on screen
+//     selectController() allow user to enumerate through list of available controllers
 
 private:
-	LPWSADATA lpWSAData = nullptr;
-	SOCKET joy_con_r_socket = NULL;
-	SOCKET joy_con_l_socket = NULL;
-	bool wsa_started = true;
+	hid_device* getDeviceNotOpen(hid_device_info* controllers);
+
+	std::vector<hid_device*> devices;
+	Joycon* players [4];
+	
 };
