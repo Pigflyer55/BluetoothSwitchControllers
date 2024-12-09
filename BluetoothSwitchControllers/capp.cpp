@@ -12,7 +12,12 @@ capp::~capp()
 
 bool capp::OnInit()
 {
+	SetAppName("bluetooth_switch_controller");
+	SetAppDisplayName("Switch Controller PC");
+	//wxInitAllImageHandlers();
 	m_frame1 = new cMain();
+	
+	
 	m_frame1->Show();
 	return true;
 }
