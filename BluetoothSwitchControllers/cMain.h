@@ -4,11 +4,14 @@
 #include "bthSwitch.h"
 #include <wx/dcbuffer.h>
 
+
+
 class imagePanel : public wxPanel 
 {
 public:
 	// format parameter might be redundant if all images are the same format
 	imagePanel(wxWindow* parent, wxString file, wxBitmapType format);
+	void changeImage(wxString file, wxBitmapType format);
 	void paintEvent(wxPaintEvent& evt);
 	void paintNow();
 	void onSize(wxSizeEvent& evt);
@@ -22,20 +25,27 @@ class controllerOrderPanel : public wxPanel
 {
 public:
 	controllerOrderPanel(wxWindow* parent);
+	//controllerOrderPanel(wxWindow* parent, wxString file1, wxString file2)
 	~controllerOrderPanel();
+	void changeImage(wxString file, wxBitmapType format);
+	void changeImage(wxString file1, wxString file2, wxBitmapType format);
+
+	
 
 private:
 	wxButton* m_btnDisconnect = nullptr;
 	wxButton* m_btnConnect = nullptr;
 	imagePanel* m_imgController = nullptr;
-	wxStaticBitmap* m_staticBitmap = nullptr;
 	wxBoxSizer* m_sizer = nullptr;
 	imagePanel* imPan = nullptr;
-	int playerNum = 0;
+
+	Player playerNum;
+	//bthSwitch* bthManager;
 
 	void OnDisconnectController(wxCommandEvent& evt);
-	void connectController();
-	void disconnectController();
+	void connectController(wxCommandEvent& evt);
+	void disconnectController(wxCommandEvent& evt);
+
 };
 
 class cMain : public wxFrame
@@ -43,6 +53,8 @@ class cMain : public wxFrame
 public:
 	cMain();
 	~cMain();
+	bthSwitch* bth_man = nullptr;
+
 
 private:
 	//wxButton *m_btn1 = nullptr;
@@ -50,7 +62,7 @@ private:
 	wxButton* m_btnDisconnect = nullptr;
 	//wxTextCtrl* m_txt1 = nullptr;
 	//wxListBox* m_list1 = nullptr;
-	bthSwitch* bth_man = nullptr;
+	
 	wxBoxSizer* m_mainSizer = nullptr;
 	wxBoxSizer* m_topSizer = nullptr;
 	wxPanel* m_topPanel = nullptr;
