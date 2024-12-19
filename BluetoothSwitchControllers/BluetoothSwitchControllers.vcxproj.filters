@@ -27,6 +27,12 @@
     <ClInclude Include="Joycon.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="joyToKey.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rumbleData.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="capp.cpp">
@@ -42,6 +48,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="joyToKey.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rumbleData.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

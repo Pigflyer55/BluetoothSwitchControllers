@@ -171,7 +171,9 @@ int main()
     buf3[10] = 0x31;
     //buf3[11] = 0x00;
 
-    //%%%%%%%%%%%%%%% From dekuNukem %%%%%%%%%%%%%%%%
+    // 
+    // Frequency code from dekuNukem Nintendo Switch Reverse Engineering
+    // 
     //Float frequency to hex conversion
 
     float freq = 300.0f;

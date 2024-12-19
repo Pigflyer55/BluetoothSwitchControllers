@@ -14,6 +14,7 @@
 #include <debugapi.h>
 
 #include <wx/stdpaths.h>
+
 /*
 wxBEGIN_EVENT_TABLE(cMain, wxFrame)
 	EVT_BUTTON(10001, OnButtonClicked)
@@ -64,7 +65,9 @@ void imagePanel::render(wxDC& dc) {
 	dc.DrawBitmap(newBitmap, 0, 0, false);
 }
 
-
+// TODO
+// Replace file path with location of executable
+// 
 controllerOrderPanel::controllerOrderPanel(wxWindow* parent) : wxPanel(parent, wxID_ANY, wxDefaultPosition, wxSize(200,100)) {
 	this->SetWindowStyle(wxFULL_REPAINT_ON_RESIZE);
 	this->SetBackgroundColour(wxColour(200,20,20));
@@ -78,11 +81,16 @@ controllerOrderPanel::controllerOrderPanel(wxWindow* parent) : wxPanel(parent, w
 	//wxBitmap* b = new wxBitmap(*m_imgController);
 	imPan = new imagePanel(this, wxString("C:/Users/SAMSAUNG/source/repos/BluetoothSwitchControllers/joycon.jpg"), wxBITMAP_TYPE_JPEG);
 
+	//this->bthManager = bthManager;
+
 	m_sizer->Add(imPan, 1, wxEXPAND);
 	m_sizer->Add(m_btnDisconnect, 1, wxEXPAND);
 	m_sizer->Add(m_btnConnect, 1, wxEXPAND);
 	this->SetSizer(m_sizer);
-	
+
+	m_btnDisconnect->Bind(wxEVT_BUTTON, &controllerOrderPanel::disconnectController, this, m_btnDisconnect->GetId());
+	m_btnConnect->Bind(wxEVT_BUTTON, &controllerOrderPanel::connectController, this, m_btnConnect->GetId());
+	playerNum = Player::Player1;
 }
 
 controllerOrderPanel::~controllerOrderPanel() {
@@ -92,6 +100,23 @@ controllerOrderPanel::~controllerOrderPanel() {
 void controllerOrderPanel::OnDisconnectController(wxCommandEvent &evt) {
 	
 }
+
+void controllerOrderPanel::disconnectController(wxCommandEvent& evt) {
+	cMain* frame = wxDynamicCast(this->GetParent(), cMain);
+	frame->bth_man->disconnectJoycons(this->playerNum);
+	evt.Skip();
+}
+
+void controllerOrderPanel::connectController(wxCommandEvent& evt) {
+	cMain* frame = wxDynamicCast(this->GetGrandParent(), cMain);
+	OutputDebugStringA(typeid(frame).name());
+	OutputDebugStringA("\n");
+	frame->bth_man->connectJoycons(this->playerNum);
+	//this->bthManager->connectJoycons();
+	//this->parent->bth_man->connectJoycons();
+	evt.Skip();
+}
+
 
 cMain::cMain() : wxFrame(nullptr, wxID_ANY, "Bluetooth Switch", wxPoint(30, 30), wxSize(800,600))
 {
@@ -160,9 +185,10 @@ void cMain::OnButtonClicked(wxCommandEvent& evt)
 }
 */
 
+//Testing function
 void cMain::FindDeviceClicked(wxCommandEvent& evt)
 {
-	bth_man->connectJoycons();
+	this->bth_man->test(0);
 	evt.Skip();
 	
 }

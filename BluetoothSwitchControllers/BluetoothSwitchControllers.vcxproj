@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -22,13 +22,17 @@
     <ClInclude Include="bthSwitch.h" />
     <ClInclude Include="capp.h" />
     <ClInclude Include="cMain.h" />
+    <ClInclude Include="rumbleData.h" />
     <ClInclude Include="Joycon.h" />
+    <ClInclude Include="joyToKey.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="bthSwitch.cpp" />
     <ClCompile Include="capp.cpp" />
     <ClCompile Include="cMain.cpp" />
     <ClCompile Include="Joycon.cpp" />
+    <ClCompile Include="joyToKey.cpp" />
+    <ClCompile Include="rumbleData.cpp" />
     <ClCompile Include="test.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
